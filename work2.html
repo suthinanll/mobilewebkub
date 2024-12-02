@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@3.7.4/dist/vuetify.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.7.4/dist/vuetify.min.js"></script>
+
+
+    <title>My first Vue page</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap');
+
+        body {
+            font-family: "Kanit", sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        #app {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            padding: 15px;
+            background-color: #2196F3;
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 600;
+            text-align: center;
+            border-radius: 8px;
+        }
+
+        .question-card {
+            background-color: #fafafa;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .question-title {
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+
+        .question-options {
+            margin-top: 10px;
+        }
+
+        .footer {
+            position: sticky;
+            bottom: 0;
+            background-color: #2196F3;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .footer v-btn {
+            color: white;
+            font-weight: 600;
+        }
+
+        .result {
+            text-align: center;
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #4CAF50;
+            margin-top: 20px;
+        }
+
+        v-btn {
+            margin-top: 20px;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <v-app>
+            <div class="header">แบบทดสอบ</div><br>
+            <div v-if="page == 1" class="text-center"><br>
+                <v-btn color="primary" @click="page = 2" elevation="2">
+                    เริ่มทำแบบทดสอบ
+                </v-btn>
+            </div>
+            <div v-if="page == 2">
+                <div v-for="(q, i) in qlist" :key="i" class="question-card">
+                    <div class="question-title">ข้อที่ {{ i + 1 }}</div>
+                    <div v-html="q.title"></div>
+                    <v-radio-group v-model="answers[i]" class="question-options">
+                        <v-radio v-for="(otxt, ov) in q.options" :key="ov" :label="otxt" :value="ov + 1"></v-radio>
+                    </v-radio-group>
+                </div>
+
+                <div class="footer">
+                    <v-btn v-if="validate()" color="success" @click="grading" elevation="2">
+                        <v-icon>mdi-check</v-icon> ตรวจคำตอบ
+                    </v-btn>
+                    <div v-else>กรุณาตอบให้ครบ</div>
+                </div>
+            </div>
+            <div v-if="page == 3" class="result">
+                คุณได้คะแนน {{ score }}
+            </div>
+        </v-app>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+        const { createVuetify } = Vuetify;
+
+        const vuetify = createVuetify();
+
+        const app = createApp({
+            data() {
+                return {
+                    qlist: [],
+                    answers: [],
+                    score: 0,
+                    page: 1,
+                };
+            },
+            mounted() {
+                this.load_data();
+            },
+            methods: {
+                async load_data() {
+                    const res = await fetch("data.json");
+                    this.qlist = await res.json();
+                },
+                validate() {
+                    return this.answers.length === this.qlist.length && this.answers.every((a) => a !== undefined);
+                },
+                grading() {
+                    this.score = this.qlist.reduce((total, q, index) => {
+                        return total + (this.answers[index] == q.answer ? 1 : 0);
+                    }, 0);
+                    this.page = 3;
+                },
+            },
+        });
+
+        app.use(vuetify).mount("#app");
+    </script>
+</body>
+
+</html>
